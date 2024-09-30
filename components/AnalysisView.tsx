@@ -118,7 +118,7 @@ export function AnalysisView({navigation}): React.JSX.Element {
     const [todosShowing,setTodosShowing] = useState({});
     
 //    console.log("refreshing analysis")
-    
+
     let chartData:Array<DataSet> = [];
 
     let trackIndex = 0;
@@ -180,16 +180,15 @@ export function AnalysisView({navigation}): React.JSX.Element {
 //        setChartData(chartData)
 //    }
 
-    //hideYAxisText
     return <View style={styles.container} >
                 <View style={styles.chartAndRangeContainer} >
                     <View style={styles.chartContianer}>
                         <LineChart
-//                            style={styles.chart}
-                            spacing={(Dimensions.get('window').width * 0.7)/10}
+                            style={styles.chart}
+                            hideYAxisText
+                            spacing={(Dimensions.get('window').width * 0.7)/9}
                             width={Dimensions.get('window').width * 0.7}
                             dataSet={chartData}
-                            yAxisThickness={0}
     pointerConfig={{
                   pointerStripUptoDataPoint: false,
                   pointerStripColor: 'transparent',
@@ -220,7 +219,7 @@ export function AnalysisView({navigation}): React.JSX.Element {
 
 function PointerLabel({items,todosShowing}) {
     let showItems = items.filter( (item) => {
-//        console.log( item )
+        console.log( item )
         return isShowingTodo( item.todo, todosShowing )
     })
     const toDisplayValue = (item) => {
