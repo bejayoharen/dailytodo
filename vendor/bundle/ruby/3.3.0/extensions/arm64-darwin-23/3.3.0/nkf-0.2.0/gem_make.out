@@ -1,0 +1,18 @@
+current directory: /Users/bjornroche/code/rn/checklist/vendor/bundle/ruby/3.3.0/gems/nkf-0.2.0/ext/nkf
+/opt/homebrew/opt/ruby/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/bjornroche/code/rn/checklist/vendor/bundle/ruby/3.3.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20240915-40139-wtnpgj sitelibdir\=./.gem.20240915-40139-wtnpgj clean
+
+current directory: /Users/bjornroche/code/rn/checklist/vendor/bundle/ruby/3.3.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20240915-40139-wtnpgj sitelibdir\=./.gem.20240915-40139-wtnpgj
+compiling nkf.c
+linking shared-object nkf.bundle
+
+current directory: /Users/bjornroche/code/rn/checklist/vendor/bundle/ruby/3.3.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20240915-40139-wtnpgj sitelibdir\=./.gem.20240915-40139-wtnpgj install
+/usr/bin/install -c -m 0755 nkf.bundle ./.gem.20240915-40139-wtnpgj
+
+current directory: /Users/bjornroche/code/rn/checklist/vendor/bundle/ruby/3.3.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20240915-40139-wtnpgj sitelibdir\=./.gem.20240915-40139-wtnpgj clean

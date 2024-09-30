@@ -1,0 +1,8 @@
+    • npx react-native run-ios
+    - or -
+    • Open checklist/ios/checklist.xcworkspace in Xcode or run "xed -b ios"
+    • Hit the Run button
+    
+to edit everything:
+
+open -a /Applications/Xcode.app *.tsx models/*.tsx components/*.tsx util/*.tsx
