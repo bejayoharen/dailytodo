@@ -1,6 +1,1 @@
-typedef CF_ENUM(int32_t, RNSVGEdgeMode) {
-  SVG_EDGEMODE_UNKNOWN,
-  SVG_EDGEMODE_DUPLICATE,
-  SVG_EDGEMODE_WRAP,
-  SVG_EDGEMODE_NONE
-};
+../../../../../node_modules/react-native-svg/apple/Filters/RNSVGEdgeMode.h

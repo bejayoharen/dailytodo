@@ -1,6 +1,1 @@
-#import <RNReanimated/REAAnimationsManager.h>
-
-@interface REASwizzledUIManager : NSObject
-- (instancetype)initWithUIManager:(RCTUIManager *)uiManager
-             withAnimationManager:(REAAnimationsManager *)animationsManager;
-@end
+../../../../../node_modules/react-native-reanimated/apple/LayoutReanimation/REASwizzledUIManager.h

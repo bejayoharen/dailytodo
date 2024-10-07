@@ -1,6 +1,1 @@
-namespace reanimated {
-
-CGFloat getUIAnimationDragCoefficient(void);
-CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimestamp);
-
-} // namespace reanimated
+../../../../../node_modules/react-native-reanimated/apple/REASlowAnimations.h

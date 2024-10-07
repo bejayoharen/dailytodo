@@ -1,8 +1,1 @@
-#import "RNSScreen.h"
-
-@interface RNSScreenStackAnimator : NSObject <UIViewControllerAnimatedTransitioning>
-
-- (instancetype)initWithOperation:(UINavigationControllerOperation)operation;
-+ (BOOL)isCustomAnimation:(RNSScreenStackAnimation)animation;
-
-@end
+../../../../../node_modules/react-native-screens/ios/RNSScreenStackAnimator.h

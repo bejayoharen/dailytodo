@@ -167,7 +167,7 @@ export default function App(): React.JSX.Element {
         loadDataCallback();
     }, [loadDataCallback]);
     
-    // update teh date when reloading the app.
+    // update the date when reloading the app.
     useEffect(() => {
         const subscription = AppState.addEventListener('change', nextAppState => {
             const n = new Date();

@@ -1,7 +1,1 @@
-#import "RNSVGFilterPrimitive.h"
-
-@interface RNSVGFeMerge : RNSVGFilterPrimitive
-
-@property (nonatomic, copy) NSArray<NSString *> *nodes;
-
-@end
+../../../../../node_modules/react-native-svg/apple/Filters/RNSVGFeMerge.h

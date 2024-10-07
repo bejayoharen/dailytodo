@@ -1,5 +1,1 @@
-#import "RNSVGFilterPrimitiveManager.h"
-
-@interface RNSVGFeOffsetManager : RNSVGFilterPrimitiveManager
-
-@end
+../../../../../node_modules/react-native-svg/apple/ViewManagers/RNSVGFeOffsetManager.h

@@ -1,11 +1,1 @@
-#import <React/RCTEventDispatcher.h>
-
-typedef void (^KeyboardEventListenerBlock)(int keyboardState, int height);
-
-@interface REAKeyboardEventObserver : NSObject
-
-- (instancetype)init;
-- (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener;
-- (void)unsubscribeFromKeyboardEvents:(int)listenerId;
-
-@end
+../../../../../node_modules/react-native-reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h

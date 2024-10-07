@@ -1,11 +1,1 @@
-#if TARGET_OS_OSX
-
-#import <React/RCTUIKit.h>
-
-@interface RCTUIView (Reanimated)
-
-@property CGPoint center;
-
-@end
-
-#endif
+../../../../../node_modules/react-native-reanimated/apple/RCTUIView+Reanimated.h

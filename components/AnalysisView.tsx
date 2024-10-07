@@ -117,6 +117,8 @@ export function AnalysisView({navigation}): React.JSX.Element {
     const now = new Date();
     const [todosShowing,setTodosShowing] = useState({});
     
+//    console.log("refreshing analysis")
+    
     let chartData:Array<DataSet> = [];
 
     let trackIndex = 0;
@@ -135,40 +137,40 @@ export function AnalysisView({navigation}): React.JSX.Element {
         for( let j=-6; j<=0; ++j ) {
             ts.push( getTaskForDay( tasks[t.id], dateUtil.addDays( now, j ) ) )
         }
-        if( t.period == period.DAILY || t.period == period.WEEKLY  || t.period == period.MOTHLY ) {
+        if( t.period === period.DAILY || t.period === period.WEEKLY  || t.period === period.MOTHLY ) {
             const a = ts.map( (task,idx) => {
                 return {
                     todo: t,
                     task: task,
                     value: -1-trackIndex,
-                    hideDataPoint: task == null,
+                    hideDataPoint: task === null,
                     dataPointColor: show ? ( task ? "green" : "red" ) : "#00000000",
                     dataPointRadius: 5,
                     dow: dateUtil.displayDate(dateUtil.addDays( now, -6+idx )),
                 }
             } ) ;
             chartData.push( {
-            data:a,
-            color:show?color:"#00000000",
-            thickness: 3,
+                data:a,
+                color:show?color:"#00000000",
+                thickness: 3,
             } );
             ++trackIndex;
-        } else if( t.period == period.DAILY_TRACKER ) {
+        } else if( t.period === period.DAILY_TRACKER ) {
             const a = ts.map( (task) => {
+                console.log( (task&&task.value)?task.value:0 )
                 return {
                     todo: t,
                     task: task,
-                    value: task?task.value:0,
-                    hideDataPoint: task == null,
+                    value: (task&&task.value)?task.value:0,
+                    hideDataPoint: task === null,
                     dataPointColor: show ? ( t ? "green" : "red" ) : "#00000000",
                     dataPointRadius: 5,
                 }
             } );
             chartData.push( {
-            data:a,
-            color:color,
-            thickness: 3,
-            color:show?color:"#00000000",
+                data:a,
+                thickness: 3,
+                color:show?color:"#00000000",
             } );
         }
     } );
@@ -178,15 +180,16 @@ export function AnalysisView({navigation}): React.JSX.Element {
 //        setChartData(chartData)
 //    }
 
+    //hideYAxisText
     return <View style={styles.container} >
                 <View style={styles.chartAndRangeContainer} >
                     <View style={styles.chartContianer}>
                         <LineChart
-                            style={styles.chart}
-                            hideYAxisText
-                            spacing={(Dimensions.get('window').width * 0.7)/9}
+//                            style={styles.chart}
+                            spacing={(Dimensions.get('window').width * 0.7)/10}
                             width={Dimensions.get('window').width * 0.7}
                             dataSet={chartData}
+                            yAxisThickness={0}
     pointerConfig={{
                   pointerStripUptoDataPoint: false,
                   pointerStripColor: 'transparent',
@@ -217,7 +220,7 @@ export function AnalysisView({navigation}): React.JSX.Element {
 
 function PointerLabel({items,todosShowing}) {
     let showItems = items.filter( (item) => {
-        console.log( item )
+//        console.log( item )
         return isShowingTodo( item.todo, todosShowing )
     })
     const toDisplayValue = (item) => {

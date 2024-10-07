@@ -1,5 +1,1 @@
-@protocol RNGestureHandlerStateManager
-
-- (void)setGestureState:(int)state forHandler:(int)handlerTag;
-
-@end
+../../../../../node_modules/react-native-reanimated/apple/RNGestureHandlerStateManager.h

@@ -1,4 +1,1 @@
-typedef CF_ENUM(int32_t, RNSVGMaskType) {
-  kRNSVGMaskTypeLuminance,
-  kRNSVGMaskTypeAlpha
-};
+../../../../../node_modules/react-native-svg/apple/Utils/RNSVGMaskType.h

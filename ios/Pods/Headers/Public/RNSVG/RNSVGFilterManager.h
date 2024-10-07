@@ -1,5 +1,1 @@
-#import "RNSVGNodeManager.h"
-
-@interface RNSVGFilterManager : RNSVGNodeManager
-
-@end
+../../../../../node_modules/react-native-svg/apple/ViewManagers/RNSVGFilterManager.h
