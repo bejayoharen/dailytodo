@@ -2,7 +2,7 @@ import {enablePromise, openDatabase, SQLiteDatabase} from "react-native-sqlite-s
 import {TODO_TABLE_NAME,newTodo,period,TodoItem,TODO_SCHEMA,deserializeTodo} from "./todo"
 import {TASK_TABLE_NAME,TaskItem,TASK_SCHEMA,deserializeTask} from "./tasks"
 import {MIGRATION_TABLE_NAME,MIGRATION_SCHEMA,MIGRATIONS,deserializeMigration,migration} from "./migration"
-
+import { addDays } from "../util/dateUtil"
     
 enablePromise(true);
 
@@ -128,13 +128,13 @@ export const deleteTask = async( db: SQLiteDatabase, id: number ) => {
     }
 }
 
-//FIXME: we need to go back however many days from the show date, not from now!
-export const getRecentTasksByTodoId = async (db: SQLiteDatabase): Promise<string,TaskItem> => {
+export const getRecentTasksByTodoId = async (db: SQLiteDatabase, showDate, dateRange): Promise<string,TaskItem> => {
   try {
     const taskItems = {};
-    let start = new Date();
+    let start = addDays(showDate,-dateRange)
+    let end = addDays(showDate,dateRange)
     start.setDate(start.getDate() - 32);
-    const results = await loggedQuery(db,(`SELECT * FROM ${TASK_TABLE_NAME} WHERE created > ${start.valueOf()}`));
+    const results = await loggedQuery(db,(`SELECT * FROM ${TASK_TABLE_NAME} WHERE created > ${start.valueOf()} AND created < ${end.valueOf()}`));
     results.forEach(result => {
       for (let index = 0; index < result.rows.length; index++) {
           const task = deserializeTask(result.rows.item(index))

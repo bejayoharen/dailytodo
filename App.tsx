@@ -50,13 +50,13 @@ function TodayScreen({navigation}) {
         const db = await dbutil.getDBConnection();
         await dbutil.insertTask(db,task);
         
-        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db) )
+        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db, context.showDate, 80) )
     }
     const onUncompleted = async ( task: TaskItem ) => {
         const db = await dbutil.getDBConnection();
         await dbutil.deleteTask(db,task.id);
         
-        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db) )
+        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db, context.showDate, 80) )
     }
     
     const updateTracker = async (todo,tsk,newVal) => {
@@ -73,7 +73,7 @@ function TodayScreen({navigation}) {
         task.value = newVal
         await dbutil.insertTask(db,task);
         
-        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db) )
+        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db, context.showDate, 80) )
     }
     
     return (
@@ -111,7 +111,7 @@ function EditScreen() {
         const db = await dbutil.getDBConnection();
         await dbutil.deleteTodo(db,id);
         context.setTodos( await dbutil.getTodoItems(db) )
-        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db) )
+        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db, context.showDate, 80))
     }
     const editTodo = async ( todo:TodoItem, taskName:stirng, frequency:number, min:number, max:number ) => {
 //        console.log(todo)
@@ -144,28 +144,29 @@ export default function App(): React.JSX.Element {
     const [now, setNow] = useState( new Date() );
     const [showDate, setShowDate] = useState( new Date() );
     
-    const loadDataCallback = useCallback(async () => {
-        try {
-            const db = await dbutil.getDBConnection();
-            if( RESET_DB ) {
-                await dbutil.resetDB(db);
-                if( POPULATE_SAMPLE_DATA ) {
-                    await dbutil.createDefaultTestData(db);
+    useEffect( () =>{
+        const loadDataCallback = async () => {
+            try {
+                const db = await dbutil.getDBConnection();
+                if( RESET_DB ) {
+                    await dbutil.resetDB(db);
+                    if( POPULATE_SAMPLE_DATA ) {
+                        await dbutil.createDefaultTestData(db);
+                    }
+                } else {
+                    await dbutil.createTables(db);
                 }
-            } else {
-                await dbutil.createTables(db);
+                await dbutil.runMigrations(db);
+        
+                setTodos(await dbutil.getTodoItems(db));
+                setRecentTasks( await dbutil.getRecentTasksByTodoId(db, showDate, 80) );
+            } catch (error) {
+                console.error(error);
             }
-            await dbutil.runMigrations(db);
-    
-            setTodos(await dbutil.getTodoItems(db));
-            setRecentTasks( await dbutil.getRecentTasksByTodoId(db) )
-        } catch (error) {
-            console.error(error);
-        }
-    }, []);
-    useEffect(() => {
+            return () => {};
+        };
         loadDataCallback();
-    }, [loadDataCallback]);
+    }, [showDate]);
     
     // update the date when reloading the app.
     useEffect(() => {
@@ -174,11 +175,10 @@ export default function App(): React.JSX.Element {
             setNow( n );
             setShowDate( n );
 //            console.log('AppState', nextAppState);
-            
-            return () => {
-                subscription.remove();
-            };
         });
+        return () => {
+            subscription.remove();
+        };
     }, []);
     
     const datePlus = () => {

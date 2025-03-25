@@ -30,6 +30,7 @@ import {
 import * as dateUtil from "../util/dateUtil"
 import {TodoItem,period,periodSortOrder} from "../models/todo"
 import {TaskItem} from "../models/tasks"
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
 export function TodayView({navigation, todos, tasks, now, showDate, toggleCompleted, onCompleted, onUncompleted, updateTracker}): React.JSX.Element {
     if( todos.length == 0 ) {
@@ -49,6 +50,29 @@ export function TodayView({navigation, todos, tasks, now, showDate, toggleComple
     </View>
 }
 
+function getCompleteDays( tasks, startDate: number, numDays: number ): [ boolean[], any, number ] {
+    let completeDays = []
+    let task = null;
+    let daysDone = 0;
+    for( let i = 0; i<numDays; ++i ) {
+        let d = false;
+        if( tasks ) {
+            for( let tsk in tasks ) {
+                if( dateUtil.isSameDayLocally(tasks[tsk].created,dateUtil.addDays(startDate,i)) ) {
+                    d = true;
+                    task = tasks[tsk];
+                    ++daysDone;
+                }
+            }
+        }
+        completeDays.push(d)
+    }
+    return [ completeDays, task, daysDone ];
+}
+function countCompleteDays( completeDays: boolean[] ) : number {
+    return completeDays === null ? 0 : completeDays.reduce( (a,b) => a + (b ? 1 : 0), 0 )
+}
+
 function TodoStatus({todo,showDate,tasks,onCompleted,onUncompleted,updateTracker}): React.JSX.Element {
     let frequencyText = "Do Every Day"
     if( todo.period === period.DAILY_TRACKER ) {
@@ -61,61 +85,24 @@ function TodoStatus({todo,showDate,tasks,onCompleted,onUncompleted,updateTracker
     
     //find out if the current one is completed:
     // it's considered complete if it's been done today.
-    let isComplete = false;
-    let completeTask = null;
-    if( tasks ) {
-        for( tsk in tasks ) {
-            if( dateUtil.isSameDayLocally(tasks[tsk].created,showDate) ) {
-                isComplete = true;
-                completeTask = tasks[tsk];
-            }
-        }
-    }
+    const [ , completeTask ] = getCompleteDays( tasks, showDate, 1 );
+    const [ lastSevenComplete ] = getCompleteDays( tasks, dateUtil.addDays( showDate, -7 ), 7 );
+    const isComplete = completeTask != null;
+    const [ weeklyComplete, , daysDoneWeek ] = getCompleteDays( tasks, dateUtil.addDays( showDate, -showDate.getDay() ), 7 );
+    const [ monthlyComplete, , daysDoneMonth ] = getCompleteDays( tasks, dateUtil.addDays( showDate, -showDate.getDate() + 1 ), dateUtil.daysInMonth( showDate.getMonth()+1, showDate.getFullYear() ) );
+    const [ lastWeekComplete, , daysDoneLastWeek] = getCompleteDays( tasks, dateUtil.addDays( showDate, -showDate.getDay() - 7 ), 7 );
+    const [ lastMonthComplete, , daysDoneLastMonth ] = getCompleteDays( tasks, dateUtil.addDays( showDate, -showDate.getDate() + 1 - dateUtil.daysInMonth( showDate.getMonth(), showDate.getFullYear() ) ), dateUtil.daysInMonth( showDate.getMonth(), showDate.getFullYear() ) );
+
     if( todo.period === period.DAILY ) {
         frequencyText = isComplete ? "Done!" : "Need to do!"
+    } else if( todo.period === period.DAILY_TRACKER ) {
+        frequencyText = isComplete ? "Tracked: " + completeTask.value : "Need to track!"
+    } else if( todo.period === period.WEEKLY ) {
+        frequencyText = "Completed " + daysDoneWeek + " of " + todo.frequency + " for the week.\n" + Math.floor(100*daysDoneWeek/todo.frequency + .5) + "% of weekly goal."
+    } else if( todo.period === period.MONTHLY ) {
+        frequencyText = "Completed " + daysDoneMonth + " of " + todo.frequency + " for the month.\n" + Math.floor(100*daysDoneMonth/todo.frequency + .5) + "% of monthly goal."
     }
-    //for weekly events and monthly events, figure out which ones are done:
-    let weeklyComplete = []
-    let dow = showDate.getDay()
-    let daysDone = 0;
-    if( todo.period === period.WEEKLY ) {
-        const sow = dateUtil.addDays( showDate, -dow ) //start of week
-        for( i = 0; i<7; ++i ) {
-            let d = false;
-            if( tasks ) {
-                for( tsk in tasks ) {
-                    if( dateUtil.isSameDayLocally(tasks[tsk].created,dateUtil.addDays(sow,i)) ) {
-                        d = true;
-                    }
-                }
-            }
-            weeklyComplete.push(d)
-            if( d ) ++daysDone;
-        }
-        frequencyText = "Completed " + daysDone + " of " + todo.frequency + " for the week.\n" + Math.floor(100*daysDone/todo.frequency + .5) + "% of weekly goal."
-    }
-    
-    let monthlyComplete = []
-    let dom = showDate.getDate()
-    if( todo.period === period.MONTHLY ) {
-        daysDone = 0;
-        const som = dateUtil.addDays( showDate, -dom ) //start of week
-//        console.log( now.getMonth()+1, now.getFullYear() )
-        let dim = dateUtil.daysInMonth( showDate.getMonth()+1, showDate.getFullYear() )
-        for( i = 0; i<dim; ++i ) {
-            let d = false;
-            if( tasks ) {
-                for( tsk in tasks ) {
-                    if( dateUtil.isSameDayLocally(tasks[tsk].created,dateUtil.addDays(som,i)) ) {
-                        d = true;
-                    }
-                }
-            }
-            monthlyComplete.push(d)
-            if( d ) ++daysDone;
-        }
-        frequencyText = "Completed " + daysDone + " of " + todo.frequency + " for the month.\n" + Math.floor(100*daysDone/todo.frequency + .5) + "% of monthly goal."
-    }
+    console.log( "TodoStatus", todo.period, isComplete, completeTask )
 //    console.log( JSON.stringify( monthlyComplete ) )
     
     
@@ -139,19 +126,49 @@ function TodoStatus({todo,showDate,tasks,onCompleted,onUncompleted,updateTracker
         </View>
     }
     { todo.period === period.WEEKLY &&
-        <ProgressView amount={daysDone/todo.frequency} />
+        <ProgressView amount={daysDoneWeek/todo.frequency} />
     }
     { todo.period === period.MONTHLY &&
-        <ProgressView amount={daysDone/todo.frequency} />
+        <ProgressView amount={daysDoneMonth/todo.frequency} />
     }
             </View>
     </View>
     </Pressable>
+        {todo.period === period.DAILY && <LastSevenDays lastSevenComplete={lastSevenComplete} />}
         {todo.period === period.DAILY_TRACKER && <DailyTrackerBottom todo={todo} tasks={tasks} showDate={showDate} updateTracker={updateTracker} />}
-    {todo.period === period.WEEKLY && <WeeklyBottom dow={dow} weeklyComplete={weeklyComplete} />}
-    {todo.period === period.MONTHLY && <MonthlyBottom dom={dom} monthlyComplete={monthlyComplete} />}
+        {todo.period === period.WEEKLY && <WeeklyBottom dow={showDate.getDay()} lastWeekComplete={lastWeekComplete} weeklyComplete={weeklyComplete} />}
+        {todo.period === period.MONTHLY && <MonthlyBottom dom={showDate.getDate()} lastMonthComplete={lastMonthComplete} monthlyComplete={monthlyComplete} />}
     </View>
     </>
+}
+
+function LastSevenDays({lastSevenComplete}): React.JSX.Element {
+    const w = [
+        [todoViewStyle.day,todoViewStyle.dayf],
+        [todoViewStyle.day],
+        [todoViewStyle.day],
+        [todoViewStyle.day],
+        [todoViewStyle.day],
+        [todoViewStyle.day],
+        [todoViewStyle.day,todoViewStyle.dayl]
+    ];
+
+    // mark complete ones
+    for( let i = 0; i<7; ++i ) {
+        if( lastSevenComplete[i] )
+            w[i].push(todoViewStyle.todayDone)
+    }
+    
+    return <View style={todoViewStyle.week}>
+        <Text>Last 7 Days: </Text>
+    <View key="0" style={w[0]}><Text style={todoViewStyle.weekdaytext}></Text></View>
+    <View key="1" style={w[1]}><Text style={todoViewStyle.weekdaytext}></Text></View>
+    <View key="2" style={w[2]}><Text style={todoViewStyle.weekdaytext}></Text></View>
+    <View key="3" style={w[3]}><Text style={todoViewStyle.weekdaytext}></Text></View>
+    <View key="4" style={w[4]}><Text style={todoViewStyle.weekdaytext}></Text></View>
+    <View key="5" style={w[5]}><Text style={todoViewStyle.weekdaytext}></Text></View>
+    <View key="6" style={w[6]}><Text style={todoViewStyle.weekdaytext}></Text></View>
+    </View>
 }
 
 function ProgressView({amount}) {
@@ -207,7 +224,7 @@ function ProgressView({amount}) {
 function DailyTrackerBottom({todo,tasks,showDate,updateTracker}): React.JSX.Element {
     let todaysTask = null;
     let val = Math.floor( ( todo.rangeMin + todo.rangeMax ) / 2 )
-    for( i in tasks ) {
+    for( let i in tasks ) {
         if( dateUtil.isSameDayLocally( tasks[i].created, showDate ) ) {
             todaysTask = tasks[i]
             val = todaysTask.value
@@ -250,17 +267,18 @@ function DailyTrackerBottom({todo,tasks,showDate,updateTracker}): React.JSX.Elem
     </View>
 }
         
-function MonthlyBottom({dom,monthlyComplete}): React.JSX.Element {
-//    return <View><Text>MBM</Text></View>
+function MonthlyBottom({dom,monthlyComplete,lastMonthComplete}): React.JSX.Element {
     const m = [ [todoViewStyle.day,todoViewStyle.dayf] ]
-    for( i=0; i<monthlyComplete.length - 2; ++i ) {
+    for( let i=0; i<monthlyComplete.length - 2; ++i ) {
         m.push( [todoViewStyle.day] )
     }
     m.push( [todoViewStyle.day,todoViewStyle.dayl] )
+    const lm = [ [todoViewStyle.day,todoViewStyle.dayf] ]
+    for( let i=0; i<lastMonthComplete.length - 2; ++i ) {
+        lm.push( [todoViewStyle.day] )
+    }
+    lm.push( [todoViewStyle.day,todoViewStyle.dayl] )
 
-    //setup borders:
-//    console.log( m.length )
-//    console.log( dom )
     
     if( dom > 0 ) {
         m[dom-1].push(todoViewStyle.today)
@@ -269,20 +287,42 @@ function MonthlyBottom({dom,monthlyComplete}): React.JSX.Element {
         m[dom-2].push(todoViewStyle.beforetoday)
     }
     // mark complete ones
-    for( i = 0; i<monthlyComplete.length; ++i ) {
+    for( let i = 0; i<monthlyComplete.length; ++i ) {
+        // console.log( i, monthlyComplete[i] );
         if( monthlyComplete[i] )
             m[i].push(todoViewStyle.todayDone)
     }
+    for( let i = 0; i<lastMonthComplete.length; ++i ) {
+        // console.log( i, monthlyComplete[i] );
+        if( lastMonthComplete[i] )
+            lm[i].push(todoViewStyle.todayDone)
+    }
     
-    return <View style={todoViewStyle.week}>
-    { m.map( (s,idx) => {
-        return <View key={idx} style={s} ><Text style={todoViewStyle.monthdaytext}>{idx+1}</Text></View>
-    })}
-    </View>
+    return <>
+        <View style={todoViewStyle.week}>
+        { m.map( (s,idx) => {
+            return <View key={idx} style={s} ><Text style={todoViewStyle.monthdaytext}>{idx+1}</Text></View>
+        })}
+        </View>
+        <View style={todoViewStyle.week}>
+        { lm.map( (s,idx) => {
+            return <View key={idx} style={s} ><Text style={todoViewStyle.monthdaytext}>{idx+1}</Text></View>
+        })}
+        </View>
+    </>
 }
 
-function WeeklyBottom({dow,weeklyComplete}): React.JSX.Element {
+function WeeklyBottom({dow,lastWeekComplete,weeklyComplete}): React.JSX.Element {
     const w = [
+        [todoViewStyle.day,todoViewStyle.dayf],
+        [todoViewStyle.day],
+        [todoViewStyle.day],
+        [todoViewStyle.day],
+        [todoViewStyle.day],
+        [todoViewStyle.day],
+        [todoViewStyle.day,todoViewStyle.dayl]
+    ];
+    const lw = [
         [todoViewStyle.day,todoViewStyle.dayf],
         [todoViewStyle.day],
         [todoViewStyle.day],
@@ -298,25 +338,40 @@ function WeeklyBottom({dow,weeklyComplete}): React.JSX.Element {
         w[dow-1].push(todoViewStyle.beforetoday)
     }
     // mark complete ones
-    for( i = 0; i<7; ++i ) {
+    for( let i = 0; i<7; ++i ) {
         if( weeklyComplete[i] )
             w[i].push(todoViewStyle.todayDone)
     }
+    for( let i = 0; i<7; ++i ) {
+        if( lastWeekComplete[i] )
+            lw[i].push(todoViewStyle.todayDone)
+    }
     
-    return <View style={todoViewStyle.week}>
-    <View key="0" style={w[0]}><Text style={todoViewStyle.weekdaytext}>Su</Text></View>
-    <View key="1" style={w[1]}><Text style={todoViewStyle.weekdaytext}>Mo</Text></View>
-    <View key="2" style={w[2]}><Text style={todoViewStyle.weekdaytext}>Tu</Text></View>
-    <View key="3" style={w[3]}><Text style={todoViewStyle.weekdaytext}>We</Text></View>
-    <View key="4" style={w[4]}><Text style={todoViewStyle.weekdaytext}>Th</Text></View>
-    <View key="5" style={w[5]}><Text style={todoViewStyle.weekdaytext}>Fr</Text></View>
-    <View key="6" style={w[6]}><Text style={todoViewStyle.weekdaytext}>Sa</Text></View>
+    return <>
+    <View style={todoViewStyle.week}>
+        <View key="0" style={w[0]}><Text style={todoViewStyle.weekdaytext}>Su</Text></View>
+        <View key="1" style={w[1]}><Text style={todoViewStyle.weekdaytext}>Mo</Text></View>
+        <View key="2" style={w[2]}><Text style={todoViewStyle.weekdaytext}>Tu</Text></View>
+        <View key="3" style={w[3]}><Text style={todoViewStyle.weekdaytext}>We</Text></View>
+        <View key="4" style={w[4]}><Text style={todoViewStyle.weekdaytext}>Th</Text></View>
+        <View key="5" style={w[5]}><Text style={todoViewStyle.weekdaytext}>Fr</Text></View>
+        <View key="6" style={w[6]}><Text style={todoViewStyle.weekdaytext}>Sa</Text></View>
     </View>
+    <View style={todoViewStyle.week}>
+        <View key="0" style={lw[0]}><Text style={todoViewStyle.weekdaytext}>Su</Text></View>
+        <View key="1" style={lw[1]}><Text style={todoViewStyle.weekdaytext}>Mo</Text></View>
+        <View key="2" style={lw[2]}><Text style={todoViewStyle.weekdaytext}>Tu</Text></View>
+        <View key="3" style={lw[3]}><Text style={todoViewStyle.weekdaytext}>We</Text></View>
+        <View key="4" style={lw[4]}><Text style={todoViewStyle.weekdaytext}>Th</Text></View>
+        <View key="5" style={lw[5]}><Text style={todoViewStyle.weekdaytext}>Fr</Text></View>
+        <View key="6" style={lw[6]}><Text style={todoViewStyle.weekdaytext}>Sa</Text></View>
+    </View>
+    </>
 }
 
 
 
-todoViewStyle = StyleSheet.create({
+const todoViewStyle = StyleSheet.create({
 createButton: {
 },
 createButtonContainer: {
@@ -491,8 +546,7 @@ description: {
 },
 
 });
-
-checkBaseStyle = {
+const checkBaseStyle = {
 width: 15,
 height: 15,
 marginLeft: 10,
@@ -501,15 +555,14 @@ margin: 5,
 borderWidth: 2,
 borderRadius: 3
 };
-checkCheckedStyle = StyleSheet.create( { ...checkBaseStyle,
+const checkCheckedStyle = StyleSheet.create( { ...checkBaseStyle,
 borderColor: "green",
 backgroundColor: "green",
 } )
-checkUncheckedStyle = StyleSheet.create( { ...checkBaseStyle,
+const checkUncheckedStyle = StyleSheet.create( { ...checkBaseStyle,
 borderColor: "grey",
 } )
-
-pressableStyle = StyleSheet.create({
+const pressableStyle = StyleSheet.create({
 borderColor: "black",
 borderWidth: 0,
 flex: 1,
