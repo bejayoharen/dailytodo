@@ -222,7 +222,7 @@ function EditOneTodoView({todo, editTodo, onDeleteTodo}): React.JSX.Element {
 sectionStyle = StyleSheet.create({
     section: {
 //        width: "98%",
-        flexDirection: "Column",
+        flexDirection: "column",
         alignItems: 'left',
     
         borderStyle: "solid",

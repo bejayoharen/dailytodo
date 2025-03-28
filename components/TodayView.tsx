@@ -115,7 +115,7 @@ function TodoStatus({todo,showDate,tasks,onCompleted,onUncompleted,updateTracker
     
 //    console.log( "Todo Status todo:" + JSON.stringify(todo) );
 //    console.log( "Todo Status tasks:" + JSON.stringify(tasks)  );
-
+try {
     return <>
     <View style={todoViewStyle.itemContainer}>
     <Pressable style={todoViewStyle.pressable} onPress={ () => { isComplete ? onUncompleted(completeTask) : onCompleted(todo) } } >
@@ -147,6 +147,10 @@ function TodoStatus({todo,showDate,tasks,onCompleted,onUncompleted,updateTracker
         {todo.period === period.MONTHLY && <MonthlyBottom dom={showDate.getDate()} lastMonthComplete={lastMonthComplete} monthlyComplete={monthlyComplete} />}
     </View>
     </>
+} catch( e ) {
+    console.log( "Error: ", e )
+    return <Text>Error</Text>
+}
 }
 
 function LastSevenDays({lastSevenComplete}): React.JSX.Element {
@@ -276,7 +280,7 @@ function DailyTrackerBottom({todo,tasks,showDate,updateTracker}): React.JSX.Elem
         </View>
         <View style={ trackerGraphStyle.container } >
             { taskList.map( (t,idx) => {
-                const valid = t && t.value && !isNaN(t.value)
+                const valid = !!(t && t.value && !isNaN(t.value))
                 let value = valid ? t.value : 0
                 value = (value - todo.rangeMin) / ( todo.rangeMax - todo.rangeMin );
                 // console.log( ":::", t.value )
@@ -562,7 +566,7 @@ borderBottomRightRadius: 10,
 },
 day: {
     flexGrow: 1,
-    alignItems: "Center",
+    alignItems: "center",
     borderLeftWidth: 1,
     borderColor: "#ddd",
     borderWidth: 1,
