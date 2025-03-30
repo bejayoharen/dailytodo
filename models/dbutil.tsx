@@ -9,17 +9,20 @@ enablePromise(true);
 const loggedQuery = async ( db: SQLiteDatabase, query: string ) => {
     console.log( "<====" );
     try {
-        console.log( query );
-        console.log( db );
+        // console.log( query );
+        // console.log( db );
+        const start = Date.now();
         const r = await db.executeSql(query)
+        const end = Date.now();
         console.log( "Successful Query!" );
+        console.log(`Execution time: ${end - start} ms`);
         console.log( "Query was: " + query );
         console.log( "Result was: " + JSON.stringify(r,null,2) );
 //        console.log( "Result was: " + JSON.stringify(r[0],null,2) );
 //        console.log( "Result was: " + JSON.stringify(r[0].rows,null,2) );
         
         if( r && r[0] && r[0].rows ) {
-            for( i=0; i<r[0].rows.length; ++i ) {
+            for( let i=0; i<r[0].rows.length; ++i ) {
                 console.log( "   [" + i + "]: " + JSON.stringify(r[0].rows.item(i)) );
             }
         }
@@ -33,7 +36,7 @@ const loggedQuery = async ( db: SQLiteDatabase, query: string ) => {
     }
 }
 
-export const runMigrations = async( db: SQLiteDatabase ) => {
+const runMigrations = async( db: SQLiteDatabase ) => {
     let currentMigration = 0;
     // read what migration we are up to:
     const migrations: migration[] = [];
@@ -68,12 +71,15 @@ export const getDBConnection = async () => {
         databaseConnection = await openDatabase( {name: 'todo.db' , location: "default" } );
         console.log( "opened database: \n" + JSON.stringify(databaseConnection, null, 2) );
         await loggedQuery( databaseConnection, "PRAGMA foreign_keys = ON;" );
+        await runMigrations(databaseConnection); // run migrations to ensure db is up to date
+        await createTables(databaseConnection); // create tables if they do not exist
+        // Note: createTables will not overwrite existing tables, it will just ensure they exist.
         return databaseConnection;
     }
     return databaseConnection;
 }
 
-export const createTables = async (db: SQLiteDatabase) => {
+const createTables = async (db: SQLiteDatabase) => {
     const createTodoQ = `CREATE TABLE IF NOT EXISTS ${TODO_TABLE_NAME}( ${TODO_SCHEMA} );`
     await loggedQuery(db,createTodoQ);
     const createTaskQ = `CREATE TABLE IF NOT EXISTS ${TASK_TABLE_NAME}( ${TASK_SCHEMA} );`
@@ -82,7 +88,7 @@ export const createTables = async (db: SQLiteDatabase) => {
     await loggedQuery(db,createMigrationQ);
 }
 
-export const dropTables = async (db: SQLiteDatabase) => {
+const dropTables = async (db: SQLiteDatabase) => {
     const dropTaskQuery = `DROP TABLE IF EXISTS ${TASK_TABLE_NAME};`
     await loggedQuery(db,dropTaskQuery);
     const dropTodoQuery = `DROP TABLE IF EXISTS ${TODO_TABLE_NAME};`

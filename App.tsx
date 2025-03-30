@@ -13,15 +13,10 @@ import {
     StatusBar,
     StyleSheet,
     Text,
-    useColorScheme,
     View,
     AppState,
     Button,
 } from 'react-native';
-
-import {
-    Colors,
-} from 'react-native/Libraries/NewAppScreen';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -44,47 +39,15 @@ const POPULATE_SAMPLE_DATA = false;
 function TodayScreen({navigation}) {
     const context = useContext(GlobalContext);
     
-    const onCompleted = async ( todo: TodoItem ) => {
-        const task = newTask( todo, context.showDate )
-
-        const db = await dbutil.getDBConnection();
-        await dbutil.insertTask(db,task);
-        
-        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db, context.showDate, 80) )
-    }
-    const onUncompleted = async ( task: TaskItem ) => {
-        const db = await dbutil.getDBConnection();
-        await dbutil.deleteTask(db,task.id);
-        
-        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db, context.showDate, 80) )
-    }
-    
-    const updateTracker = async (todo,tsk,newVal) => {
-        console.log( todo )
-        console.log( tsk )
-        console.log( newVal )
-        
-        const db = await dbutil.getDBConnection();
-        if( tsk != null ) {
-            await dbutil.deleteTask( db, tsk.id );
-        }
-
-        const task = newTask( todo, context.showDate );
-        task.value = newVal
-        await dbutil.insertTask(db,task);
-        
-        context.setRecentTasks( await dbutil.getRecentTasksByTodoId(db, context.showDate, 80) )
-    }
-    
-    return (
-            <SafeAreaView style={editTasksStyles.container}>
+    return <>
+        <SafeAreaView style={editTasksStyles.container}>
             <ScrollView style={editTasksStyles.scrollView}>
             <View>
-            <TodayView navigation={navigation} todos={context.todos} tasks={context.tasks} onCompleted={onCompleted} onUncompleted={onUncompleted} showDate={context.showDate} now={context.now} updateTracker={updateTracker} />
+             <TodayView navigation={navigation} showDate={context.showDate} now={context.now} />
             </View>
             </ScrollView>
-            </SafeAreaView>
-            );
+        </SafeAreaView>
+    </>;
 }
 
 function AnalysisScreen() {
@@ -153,10 +116,10 @@ export default function App(): React.JSX.Element {
                     if( POPULATE_SAMPLE_DATA ) {
                         await dbutil.createDefaultTestData(db);
                     }
-                } else {
-                    await dbutil.createTables(db);
+                // } else {
+                //     await dbutil.createTables(db);
                 }
-                await dbutil.runMigrations(db);
+                // await dbutil.runMigrations(db);
         
                 setTodos(await dbutil.getTodoItems(db));
                 setRecentTasks( await dbutil.getRecentTasksByTodoId(db, showDate, 80) );
